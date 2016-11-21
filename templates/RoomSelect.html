@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>生命游戏 - 房间选择</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css"/>
+    <script src="/static/js/jquery.js"></script>
+    <script src="/static/js/bootstrap.js"></script>
+    <style rel="stylesheet">
+        body {
+            padding-top: 70px;
+            padding-bottom: 70px;
+        }
+
+        .navbar-brand {
+            padding: 0;
+        }
+
+        .navbar-nav button {
+            margin-right: 30px;
+        }
+
+        .panel-heading * {
+            display: inline;
+        }
+
+        .panel-title .label {
+            float: right;
+        }
+
+        .col-md-3, .alert {
+            display: none;
+        }
+    </style>
+    <script>
+        var id = null;
+        var name = null;
+        var win = null;
+        var fail = null;
+        var user_close_my_modal = true;
+        var page_num = 0;
+        var use_select_page = false;
+        var search_page = 0;
+
+        $.extend({ //增加standard_post方法
+            standard_post: function (url, args) {
+                var body = $(document.body),
+                        form = $("<form method='post'></form>"),
+                        input;
+                form.attr({"action": url});
+                $.each(args, function (key, value) {
+                    input = $("<input type='hidden'>");
+                    input.attr({"name": key});
+                    input.val(value);
+                    form.append(input);
+                });
+
+                form.appendTo(document.body);
+                form.submit();
+                document.body.removeChild(form[0]);
+            }
+        });
+
+        $(function (e) {
+            get_page(0); //向后台请求第一页房间
+
+            $.getJSON('/login_by_cookie', function (data) {
+                if (data['response_code'] == -1) { //判断为浏览器中没有cookie
+                    $('#my_modal').modal('show');
+                } else {
+                    set_user_info(data);
+                }
+            });
+
+            $('input[name="username"]').val('');
+
+            $('#my_modal').on('hidden.bs.modal', function (e) {
+                if (user_close_my_modal) { //用户自己关闭注册对话框
+                    $.post('/login', {'username': '匿名'}, function (data) {
+                        set_user_info(fromJSON(data));
+                    });
+                } else {
+                    //do nothing
+                }
+                $('#username_alert').hide();
+            });
+            $('#sign_up').click(function (e) { //向后台请求注册
+                var username = $.trim($('input[name="username"]').val());
+                if (username == '') {
+                    var a = $('#username_alert');
+                    a.text("用户名为空，你确定要使用'匿名'作为用户名吗？")
+                    a.show();
+                    $('input[name="username"]').val('匿名');
+                    return;
+                }
+                $.post('/login', {'username': username}, function (data) {
+                    user_close_my_modal = false;
+                    set_user_info(fromJSON(data));
+                    $('#my_modal').modal('hide');
+                });
+            });
+
+            $('.col-md-3').each(function () {
+                $(this).click(function (e) { //向后台请求进入房间
+                    var room_id = parseInt($(this).find('label').text());
+                    $.post('/join_room_by_id', {'user_id': id, 'room_id': room_id}, function (data) {
+                        var data = fromJSON(data);
+                        if (data['response_code'] == -1) {
+                            $('#error_msg').text(data['error_msg']);
+                            $('#alert_dialog').modal('show');
+                            return;
+                        }
+                        $.standard_post('/room', {'user_id': id, 'room_id': room_id});
+                    });
+                });
+            });
+
+            $('#alert_dialog').on('hidden.bs.modal', function () {
+                $('#error_msg').hide();
+            });
+
+            $('#new_room').click(function (e) { //向后台请求创建新房间
+                var new_room_name = $.trim($('input[name="room_name"]').val());
+                if (new_room_name == '') {
+                    var a = $('#room_alert');
+                    a.text("房间名不能为空！");
+                    a.show();
+                    return;
+                }
+                $.post('/new_room', {'user_id': id, 'room_name': new_room_name}, function (data) {
+                    var data = fromJSON(data);
+                    if (data['response_code'] == -1) {
+                        $('#error_msg').text(data['error_msg']);
+                        $('#alert_dialog').modal('show');
+                        return;
+                    }
+                    $.standard_post('/room', {'user_id': id, 'room_name': new_room_name});
+                });
+            });
+
+            $('#search').click(function (e) {
+                var search_text = $.trim($('#search_text').val());
+                if (search_text != '') {
+                    //TODO
+                    use_select_page = true;
+                    search_page = 0;
+                    $('.previous').addClass('disabled');
+                    $.post('/search_room', {'room_name': search_text, 'page': search_page}, function (data) {
+                        set_rooms_info(fromJSON(data), search_page);
+                    });
+                } else {
+                    //由于没有搜索条件，不进行请求
+                }
+            });
+            $('#create_room').click(function (e) {
+                $('#room_dialog').modal('show');
+            });
+            $('#random_match').click(function (e) { //随机进入房间
+                $.post('/join_room_random', {'user_id': id}, function (data) {
+                    var data = fromJSON(data);
+                    if (data['response_code'] == -1) {
+                        $('#error_msg').text(data['error_msg']);
+                        $('#alert_dialog').modal('show');
+                        return;
+                    }
+                    $.standard_post('/room', {'user_id': id, 'room_id': data['room_id']});
+                });
+            });
+            $('#previous').click(function (e) {
+                if (!$('.previous').is('.disabled')) { //如果可以点击上一页按钮，可以请求上一个页面
+                    if (use_select_page) {
+                        search_page -= 1;
+                        if (search_page == 0) {
+                            $('.previous').addClass("disabled");
+                        } else {
+                            $('.previous').removeClass("disabled");
+                        }
+                        $.post('/search_room', {'search_text': search_text, 'page': search_page}, function (data) {
+                            set_rooms_info(fromJSON(data), search_page);
+                        });
+                    }
+                    else {
+                        page_num -= 1;
+                        get_page(page_num);
+                    }
+                }
+            });
+            $('#next').click(function (e) {
+                if (!$('.next').is('.disabled')) { //如果可以点击下一页按钮，可以请求下一个页面
+                    if (use_select_page) {
+                        search_page += 1;
+                        $.post('/search_room', {'search_text': search_text, 'page': search_page}, function (data) {
+                            set_rooms_info(fromJSON(data), search_page);
+                        });
+                    }
+                    else {
+                        page_num += 1;
+                        get_page(page_num);
+                    }
+                }
+            });
+        });
+
+        function fromJSON(json) {
+            return eval("(" + json + ")");
+        }
+
+        function get_page(page) {
+            //如果是第一页，那么不能按上一页
+            if (page == 0) {
+                $('.previous').addClass("disabled");
+            } else {
+                $('.previous').removeClass("disabled");
+            }
+            $.post('/get_rooms', {'page': page}, function (data) {
+                set_rooms_info(fromJSON(data), page);
+            });
+        }
+
+        function set_rooms_info(data, page) {
+            if (data['response_code'] == 1) {
+                //如果是最后一页，那么不能按下一页
+                if (data['max_page'] == page + 1) {
+                    $('.next').addClass("disabled");
+                } else {
+                    $('.next').removeClass("disabled");
+                }
+                var rooms = data['rooms'];
+                $('.col-md-3').each(function (i) {
+                    var room_info = rooms[i];
+                    if (room_info == undefined) { //room不够，就隐藏元素
+                        $(this).hide();
+                    } else {
+                        var label = $(this).find('.label');
+                        var user_num = $(this).find('.user_num');
+                        var room_status = $(this).find('.status');
+                        label.text(room_info['id']);
+                        user_num.text(room_info['user_num'] + '/4');
+                        $(this).find('.room_name').text(room_info['name']);
+                        $(this).find('.owner').text(room_info['owner']);
+                        room_status.text(room_info['status'] ? '游戏进行中...' : '等待中...');
+                        if (room_info['user_num'] == 4 || room_info['status']) { //房间满员或正在进行游戏，显示红色
+                            label.addClass("label-danger");
+                            $(this).children('div:first').addClass("panel-danger");
+                        } else { //否则，显示绿色
+                            label.addClass("label-success");
+                            $(this).children('div:first').addClass("panel-success");
+                        }
+                        $(this).show(); //把房间显示出来
+                    }
+                });
+            } else if (data['response_code'] == -1) { //错误时，上一页和下一页都不能按
+                $('.previous').addClass("disabled");
+                $('.next').addClass("disabled");
+                $('.col-md-3').each(function (i) { //所有房间都不显示
+                    $(this).hide();
+                });
+            }
+        }
+
+        function set_user_info(data) {
+            id = data['id'];
+            name = data['name'];
+            win = data['win'];
+            fail = data['fail'];
+            $('#username').text(name);
+            $('#win').text(win);
+            $('#fail').text(fail);
+            if (fail != 0) {
+                $('#win_rate').text(parseFloat(win) / fail);
+            } else {
+                $('#win_rate').text(0);
+            }
+        }
+    </script>
+</head>
+
+<body>
+<div class="modal fade" role="dialog" id="my_modal">
+    <div class="modal-dialog">
+        <div class="modal-content" role="form">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span
+                        class="sr-only">Close</span></button>
+                <h4 class="modal-title">请输入您的用户名</h4>
+            </div>
+            <div class="modal-body">
+                <div id="username_alert" class="alert alert-warning alert-dismissible fade in" role="alert"></div>
+                <div class="form-group">
+                    <label for="username_input">用户名：</label>
+                    <input type="text" name="username" class="form-control" placeholder="请输入用户名">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="sign_up" type="submit" class="btn btn-primary">提交</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+<div class="modal fade" role="dialog" id="room_dialog">
+    <div class="modal-dialog">
+        <div class="modal-content" role="form">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span
+                        class="sr-only">Close</span></button>
+                <h4 class="modal-title">请输入新的房间名</h4>
+            </div>
+            <div class="modal-body">
+                <div id="room_alert" class="alert alert-warning alert-dismissible fade in" role="alert"></div>
+                <div class="form-group">
+                    <label for="room_input">房间名：</label>
+                    <input type="text" name="room_name" class="form-control" placeholder="请输入房间名">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="new_room" type="submit" class="btn btn-primary">提交</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+<div class="modal alert alert-danger fade in" id="alert_dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span
+                        class="sr-only">Close</span></button>
+                <h4 class="modal-title">警告</h4>
+            </div>
+            <div class="modal-body">
+                <p id="error_msg"></p>
+            </div>
+        </div>
+    </div>
+</div>
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="/">
+                <img style="position:relative;" src="/static/images/brand.png" width="150px" height="50px"/>
+            </a>
+        </div>
+        <div>
+            <ul class="nav navbar-nav navbar-right">
+                <ul class="nav navbar-nav">
+                    <li class="active">
+                        <button id="create_room" type="button" class="btn btn-primary navbar-btn">创建房间</button>
+                    </li>
+                    <li class="active">
+                        <button id="random_match" type="button" class="btn btn-info navbar-btn">随机匹配</button>
+                    </li>
+                </ul>
+                <li class="dropdown">
+                    <a href="/" class="dropdown-toggle" data-toggle="dropdown"><span id="username">未知 </span><span
+                            class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                        <li><p class="navbar-text">胜利场数：<span id="win">20</span>场</p></li>
+                        <li><p class="navbar-text">失败场数：<span id="fail">20</span>场</p></li>
+                        <li><p class="navbar-text">胜率：<span id="win_rate">50</span>%</p></li>
+                    </ul>
+                </li>
+            </ul>
+            <form class="navbar-form navbar-right" role="search">
+                <div class="form-group">
+                    <input id="search_text" type="text" class="form-control" placeholder="Search">
+                </div>
+                <button id="search" class="btn btn-default"><span class="glyphicon glyphicon-search"></span></button>
+            </form>
+        </div>
+    </div>
+</nav>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="panel">
+                <div class="panel-heading">
+                    <h3 class="panel-title"><span class="room_name">房间名</span><span class="label">001</span></h3>
+                </div>
+                <div class="panel-body">
+                    <p><span class="text-muted">房主：</span> <strong class="owner">AAA</strong></p>
+                    <p style="float: right;"><span class="text-muted">状态：</span> <span class="status">等待中&hellip;</span>
+                    </p>
+                    <p><span class="text-muted">人数：</span> <strong class="user_num">2/4</strong></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="panel">
+                <div class="panel-heading">
+                    <h3 class="panel-title"><span class="room_name">房间名</span><span class="label">001</span></h3>
+                </div>
+                <div class="panel-body">
+                    <p><span class="text-muted">房主：</span> <strong class="owner">AAA</strong></p>
+                    <p style="float: right;"><span class="text-muted">状态：</span> <span class="status">等待中&hellip;</span>
+                    </p>
+                    <p><span class="text-muted">人数：</span> <strong class="user_num">2/4</strong></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="panel">
+                <div class="panel-heading">
+                    <h3 class="panel-title"><span class="room_name">房间名</span><span class="label">001</span></h3>
+                </div>
+                <div class="panel-body">
+                    <p><span class="text-muted">房主：</span> <strong class="owner">AAA</strong></p>
+                    <p style="float: right;"><span class="text-muted">状态：</span> <span class="status">等待中&hellip;</span>
+                    </p>
+                    <p><span class="text-muted">人数：</span> <strong class="user_num">2/4</strong></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="panel">
+                <div class="panel-heading">
+                    <h3 class="panel-title"><span class="room_name">房间名</span><span class="label">001</span></h3>
+                </div>
+                <div class="panel-body">
+                    <p><span class="text-muted">房主：</span> <strong class="owner">AAA</strong></p>
+                    <p style="float: right;"><span class="text-muted">状态：</span> <span class="status">等待中&hellip;</span>
+                    </p>
+                    <p><span class="text-muted">人数：</span> <strong class="user_num">2/4</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="panel">
+                <div class="panel-heading">
+                    <h3 class="panel-title"><span class="room_name">房间名</span><span class="label">001</span></h3>
+                </div>
+                <div class="panel-body">
+                    <p><span class="text-muted">房主：</span> <strong class="owner">AAA</strong></p>
+                    <p style="float: right;"><span class="text-muted">状态：</span> <span class="status">等待中&hellip;</span>
+                    </p>
+                    <p><span class="text-muted">人数：</span> <strong class="user_num">2/4</strong></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="panel">
+                <div class="panel-heading">
+                    <h3 class="panel-title"><span class="room_name">房间名</span><span class="label">001</span></h3>
+                </div>
+                <div class="panel-body">
+                    <p><span class="text-muted">房主：</span> <strong class="owner">AAA</strong></p>
+                    <p style="float: right;"><span class="text-muted">状态：</span> <span class="status">等待中&hellip;</span>
+                    </p>
+                    <p><span class="text-muted">人数：</span> <strong class="user_num">2/4</strong></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="panel">
+                <div class="panel-heading">
+                    <h3 class="panel-title"><span class="room_name">房间名</span><span class="label">001</span></h3>
+                </div>
+                <div class="panel-body">
+                    <p><span class="text-muted">房主：</span> <strong class="owner">AAA</strong></p>
+                    <p style="float: right;"><span class="text-muted">状态：</span> <span class="status">等待中&hellip;</span>
+                    </p>
+                    <p><span class="text-muted">人数：</span> <strong class="user_num">2/4</strong></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="panel">
+                <div class="panel-heading">
+                    <h3 class="panel-title"><span class="room_name">房间名</span><span class="label">001</span></h3>
+                </div>
+                <div class="panel-body">
+                    <p><span class="text-muted">房主：</span> <strong class="owner">AAA</strong></p>
+                    <p style="float: right;"><span class="text-muted">状态：</span> <span class="status">等待中&hellip;</span>
+                    </p>
+                    <p><span class="text-muted">人数：</span> <strong class="user_num">2/4</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="panel">
+                <div class="panel-heading">
+                    <h3 class="panel-title"><span class="room_name">房间名</span><span class="label">001</span></h3>
+                </div>
+                <div class="panel-body">
+                    <p><span class="text-muted">房主：</span> <strong class="owner">AAA</strong></p>
+                    <p style="float: right;"><span class="text-muted">状态：</span> <span class="status">等待中&hellip;</span>
+                    </p>
+                    <p><span class="text-muted">人数：</span> <strong class="user_num">2/4</strong></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="panel">
+                <div class="panel-heading">
+                    <h3 class="panel-title"><span class="room_name">房间名</span><span class="label">001</span></h3>
+                </div>
+                <div class="panel-body">
+                    <p><span class="text-muted">房主：</span> <strong class="owner">AAA</strong></p>
+                    <p style="float: right;"><span class="text-muted">状态：</span> <span class="status">等待中&hellip;</span>
+                    </p>
+                    <p><span class="text-muted">人数：</span> <strong class="user_num">2/4</strong></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="panel">
+                <div class="panel-heading">
+                    <h3 class="panel-title"><span class="room_name">房间名</span><span class="label">001</span></h3>
+                </div>
+                <div class="panel-body">
+                    <p><span class="text-muted">房主：</span> <strong class="owner">AAA</strong></p>
+                    <p style="float: right;"><span class="text-muted">状态：</span> <span class="status">等待中&hellip;</span>
+                    </p>
+                    <p><span class="text-muted">人数：</span> <strong class="user_num">2/4</strong></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="panel">
+                <div class="panel-heading">
+                    <h3 class="panel-title"><span class="room_name">房间名</span><span class="label">001</span></h3>
+                </div>
+                <div class="panel-body">
+                    <p><span class="text-muted">房主：</span> <strong class="owner">AAA</strong></p>
+                    <p style="float: right;"><span class="text-muted">状态：</span> <span class="status">等待中&hellip;</span>
+                    </p>
+                    <p><span class="text-muted">人数：</span> <strong class="user_num">2/4</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<nav class="navbar navbar-fixed-bottom">
+    <ul class="pager">
+        <li class="previous"><a id="previous">&larr; 上一页</a></li>
+        <li class="next"><a id="next">下一页 &rarr;</a></li>
+    </ul>
+</nav>
+</body>
+</html>

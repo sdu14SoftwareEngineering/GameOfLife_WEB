@@ -122,8 +122,8 @@ def join_room_random(request):
 
 # 退出房间 user_id room_id
 def exit_room_by_id(request):
-    user_id = request.POST.get('user_id')
-    room_id = request.POST.get('room_id')
+    user_id = int(request.POST.get('user_id'))
+    room_id = int(request.POST.get('room_id'))
     # 找到房间
     room = get_room_by_id(room_id)
     f = False

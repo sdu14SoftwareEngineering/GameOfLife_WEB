@@ -110,7 +110,8 @@
                             $('#alert_dialog').modal('show');
                             return;
                         }
-                        $.standard_post('/room', {'user_id': id, 'room_id': room_id});
+                        //TODO
+                        $.standard_post('/', {'user_id': id, 'room_id': room_id});
                     });
                 });
             });
@@ -134,7 +135,8 @@
                         $('#alert_dialog').modal('show');
                         return;
                     }
-                    $.standard_post('/room', {'user_id': id, 'room_name': new_room_name});
+                    //TODO
+                    $.standard_post('/', {'user_id': id, 'room_name': new_room_name});
                 });
             });
 
@@ -145,7 +147,7 @@
                     use_select_page = true;
                     search_page = 0;
                     $('.previous').addClass('disabled');
-                    $.post('/search_room', {'room_name': search_text, 'page': search_page}, function (data) {
+                    $.post('/search_room', {'search_text': search_text, 'page': search_page}, function (data) {
                         set_rooms_info(fromJSON(data), search_page);
                     });
                 } else {
@@ -163,7 +165,8 @@
                         $('#alert_dialog').modal('show');
                         return;
                     }
-                    $.standard_post('/room', {'user_id': id, 'room_id': data['room_id']});
+                    //TODO
+                    $.standard_post('/', {'user_id': id, 'room_id': data['room_id']});
                 });
             });
             $('#previous').click(function (e) {
@@ -238,13 +241,13 @@
                         user_num.text(room_info['user_num'] + '/4');
                         $(this).find('.room_name').text(room_info['name']);
                         $(this).find('.owner').text(room_info['owner']);
-                        room_status.text(room_info['status'] ? '游戏进行中...' : '等待中...');
+                        room_status.text(room_info['status'] ? '游戏进行中&hellip;' : '等待中&hellip;');
                         if (room_info['user_num'] == 4 || room_info['status']) { //房间满员或正在进行游戏，显示红色
                             label.addClass("label-danger");
-                            $(this).children('div:first').addClass("panel-danger");
+                            $(this).addClass("panel-danger");
                         } else { //否则，显示绿色
                             label.addClass("label-success");
-                            $(this).children('div:first').addClass("panel-success");
+                            $(this).addClass("panel-success");
                         }
                         $(this).show(); //把房间显示出来
                     }
@@ -352,7 +355,7 @@
                     </li>
                 </ul>
                 <li class="dropdown">
-                    <a href="/" class="dropdown-toggle" data-toggle="dropdown"><span id="username">未知 </span><span
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span id="username">未知 </span><span
                             class="caret"></span></a>
                     <ul class="dropdown-menu" role="menu">
                         <li><p class="navbar-text">胜利场数：<span id="win">20</span>场</p></li>
@@ -536,8 +539,8 @@
 </div>
 <nav class="navbar navbar-fixed-bottom">
     <ul class="pager">
-        <li class="previous"><a id="previous">&larr; 上一页</a></li>
-        <li class="next"><a id="next">下一页 &rarr;</a></li>
+        <li class="previous"><a href="#" id="previous">&larr; 上一页</a></li>
+        <li class="next"><a href="#" id="next">下一页 &rarr;</a></li>
     </ul>
 </nav>
 </body>

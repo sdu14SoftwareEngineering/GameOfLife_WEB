@@ -54,7 +54,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'game_of_life',
         'USER': 'root',
-        'PASSWORD': '376787',
+        'PASSWORD': 'llxzxapxr656',
         'HOST': '127.0.0.1',
         'PORT': '3306',
     }

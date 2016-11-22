@@ -51,8 +51,8 @@ def login_by_cookie(request):
             'response_code': 1,
             'id': find_user.id,
             'name': find_user.username,
-            'win': user_cookie['win'],
-            'fail': user_cookie['fail']
+            'win': find_user.win,
+            'fail': find_user.fail
         })
         response.set_cookie('user_cookie', user_cookie)
         return response

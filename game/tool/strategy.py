@@ -2,6 +2,21 @@ def __pos_available(x, y, x_limit, y_limit):
     return x >= 0 and x < x_limit and y >= 0 and y < y_limit
 
 
+def __cal_adjacent_life_num(field, i, j):
+    num = 0
+    for x in range(i - 1, i + 2):
+        for y in range(j - 1, j + 2):
+            # 自己不算在周围的点里
+            if x == i and y == j:
+                continue
+            # 检查周围的点是否合法
+            if __pos_available(x, y, len(field), len(field[0])):
+                # 是否有生命
+                if field[x][y] == 1:
+                    num += 1
+    return num
+
+
 def __cal_adjacent_life_num_multi(field, i, j):
     num1 = num2 = num3 = num4 = num = 0
     for x in range(i - 1, i + 2):
@@ -62,6 +77,20 @@ def __cal_adjacent_life_num_multi(field, i, j):
         # 最大值Mmax非唯一
         else:
             return (max, 0)
+
+
+def one_gamer_strategy(field):
+    new_field = [[0 for i in field[0]] for i in field]
+    for i in range(len(field)):
+        for j in range(len(field[0])):
+            num = __cal_adjacent_life_num(field, i, j)
+            if num == 3:  # 如果一个细胞周围有3个细胞为生（一个细胞周围共有8个细胞），则该细胞为生
+                new_field[i][j] = 1
+            elif num == 2:  # 如果一个细胞周围有2个细胞为生，则该细胞的生死状态保持不变
+                new_field[i][j] = field[i][j]
+            else:  # 其他任何情况，细胞为死
+                new_field[i][j] = 0
+    return new_field
 
 
 def two_gamer_strategy(field):
@@ -149,8 +178,4 @@ if __name__ == '__main__':
          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
     for i in two_gamer_strategy(field):
-        print(i)
-    for i in three_gamer_strategy(field):
-        print(i)
-    for i in four_gamer_strategy(field):
         print(i)

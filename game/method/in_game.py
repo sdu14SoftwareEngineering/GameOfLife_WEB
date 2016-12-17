@@ -11,35 +11,20 @@ from game.tool.tools import *
 
 # 所有房间布局
 thread_fields = {}
-# 轮到谁了
-thread_turn = {}
 
 
-# 计时线程
-class Thread_count(threading.Thread):
+# 计时线程,计算布局
+class Thread_field(threading.Thread):
     def __init__(self, users):
         threading.Thread.__init__(self)
+        self.num = len(users)
         self.users = users
         self.turn_id = users[0]
         self.turn_index = 0
-
-    def run(self):
-        while True:
-            time.sleep(10)
-            t_index = self.turn_index
-            t_index += 1
-            if t_index == len(self.users):
-                t_index = 0
-            self.turn_index = t_index
-            self.turn_id = self.users[t_index]
-
-
-# 计算布局
-class Thread_field(threading.Thread):
-    def __init__(self, num):
-        threading.Thread.__init__(self)
-        self.num = num
         self.field = [[0] * 20 for i in range(20)]
+        self.is_end = False
+        self.winner = []
+        self.loser = []
 
     def next_field(self, old_field):
         if self.num == 1:
@@ -52,91 +37,77 @@ class Thread_field(threading.Thread):
             self.field = strategy.four_gamer_strategy(old_field)
 
     def run(self):
+        current_time = 0
         while True:
+            current_time += 5
             time.sleep(5)
+            t_index = self.turn_index
+            t_index += 1
+            if t_index == len(self.users):
+                t_index = 0
+            self.turn_index = t_index
+            self.turn_id = self.users[t_index]
             self.next_field(self.field)
+            if current_time >= 180:
+                self.is_end = True
+                self.new_result()
+                self._stop()
+                break
+
+    def new_result(self):
+        front_field = field_to_front_end(self.field)
+        result = []
+        max = 0
+        for i in range(self.num):
+            result[i] = len(front_field[i])
+            if result[i] > max:
+                max = result[i]
+        for i in range(result):
+            if result[i] == max:
+                self.winner.append(self.users[i])
+            else:
+                self.loser.append(self.users[i])
 
     def change(self, front_field):
         self.field = field_from_front_end(front_field)
         self.next_field(self.field)
-
-
-# 实时获得房间信息 room_id
-def get_room_info(request):
-    room_id = int(request.POST['room_id'])
-    room = room_tool.get_room_by_id(room_id)
-    users_array = []
-    for u_id in room.users:
-        find_user = models.User.objects.filter(id=u_id)
-        if find_user:
-            find_user = find_user[0]
-        u_dict = {
-            'user_name': find_user.username,
-            'win': find_user.win,
-            'fail': find_user.fail,
-            'user_status': room.users_status[u_id]
-        }
-        users_array.append(u_dict)
-    # 结果
-    response = {
-        'status': False,
-        'owner': room.owner,
-        'users': users_array
-    }
-    return to_json(response)
-
-
-# 更改准备状态 room_id user_id
-def change_user_status(request):
-    user_id = int(request.POST['user_id'])
-    room_id = int(request.POST['room_id'])
-    room = room_tool.get_room_by_id(room_id)
-    u_status = room.users_status[user_id]
-    room.users_status[user_id] = not u_status
-    return to_json({'response_code': 1, 'user_status': not u_status})
-
-
-# 房主开始游戏 user_id room_id
-def begin_game(request):
-    user_id = int(request.POST['user_id'])
-    room_id = int(request.POST['room_id'])
-    room = room_tool.get_room_by_id(room_id)
-    if user_id == room.owner:
-        room.users_status[user_id] = True
-        f = True
-        for u_status in room.users_status:
-            if not u_status:
-                f = False
-        if f:
-            # 计算布局线程,存入布局
-            thread_fields[room_id] = Thread_field(len(room.users))
-            thread_fields[room_id].start()
-            # 开启计时线程,存入线程
-            thread_turn[room_id] = Thread_count(room.users)
-            thread_turn[room_id].start()
-            return to_json({'response_code': 1})
+        print('next field:%s' % self.field)
 
 
 # 实时获得棋盘布局 room_id
 def get_field(request):
     room_id = int(request.POST['room_id'])
-    field = thread_fields[room_id].field
+    thread_field = thread_fields[room_id]
+    field = thread_field.field
+    print(field_to_front_end(field))
     return to_json({
         'field': field_to_front_end(field),
-        'turn_id': thread_turn[room_id].turn_id})
+        'turn_id': thread_field.turn_id,
+        'is_end': thread_field.is_end})
 
 
 # 前端更改布局 field room_id
 def change_field(request):
     room_id = int(request.POST['room_id'])
-    field = request.POST['field']
+    field = json.loads(request.POST['field'])
+    print('front post:%s' % field)
     thread_fields[room_id].change(field)
     return to_json({'response_code': 1})
 
 
-# 游戏结束，游戏结果
+# 游戏结束，游戏结果 room_id
 def get_game_result(request):
-    return 0
+    room_id = int(request.POST['room_id'])
+    thread_field = thread_fields[room_id]
+    winner = thread_field.winner
+    loser = thread_field.loser
+    thread_fields.pop(thread_field)
+    response_dict = {}
+    for w in winner:
+        response_dict.update({w: True})
+    for l in loser:
+        response_dict.update({l: False})
+    return to_json(response_dict)
 
 
 # 退出房间

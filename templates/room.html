@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bootstrap 101 Template</title>
+    <title>游戏房间</title>
 
     <script src="/static/js/echarts.js"></script>
     <!-- Bootstrap -->
@@ -13,22 +13,31 @@
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
-    <script src="http://cdn.bootcss.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-    <script src="http://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+    <script src="/static/js/html5shiv.min.js"></script>
+    <script src="/static/js/respond.min.js"></script>
     <![endif]-->
 
     <script src="/static/js/jquery.min.js"></script>
 </head>
 <body>
+<div id="alert_beginfail" class="alert alert-warning" style="display: none;">
+    <a href="#" class="close" data-dismiss="alert">&times;</a>
+    <strong>无法开始游戏！</strong>还有玩家没有准备好。
+</div>
+<div id="alert_beginsuccess" class="alert alert-success" style="display: none;">
+    <a href="#" class="close" data-dismiss="alert">&times;</a>
+    <strong>游戏开始！</strong>
+</div>
 <div class="container">
     <div class="row">
         <p>
             <center>
                 <button id="bt_userready" class="btn btn-large btn-primary" type="button">准备</button>
                 <button id="bt_userexit" class="btn btn-large" type="button">退出</button>
-                <p id="userid_hidden" hidden="hidden">1</p>
-                <p id="roomid_hidden" hidden="hidden">1</p>
-            </center>
+                <button id="bt_test" class="btn btn-large" type="button">测试</button>
+        <p id="userid_hidden" hidden="hidden">{{my_id }}</p>
+        <p id="roomid_hidden" hidden="hidden">{{room_id }}</p>
+        </center>
         </p>
     </div>
     <div class="row">
@@ -36,52 +45,64 @@
             <div style="height:30px;"></div>
             <div class="panel panel-primary">
                 <div class="panel-heading">
-                    <h3 class="panel-title">昵称:</h3>
+                    <h3 class="panel-title">昵称: &nbsp;<span id="user1_name"></span></h3>
                 </div>
                 <div class="panel-body">
-                    <p>编号:{{user_a}}</p>
-                    <p>积分:</p>
-                    <p>胜率:</p>
+                    <p>编号: &nbsp;<span id="user1_id"></span></p>
+                    <p>胜率: &nbsp;<span id="user1_winrate"></span></p>
+                    <P>状态: &nbsp;<span id='user1_label' class="label label-success"></span></P>
                 </div>
             </div>
 
-            <div style="height:200px;"></div>
+            <div style="height:150px;"></div>
             <div class="panel panel-success">
                 <div class="panel-heading">
-                    <h3 class="panel-title">昵称:</h3>
+                    <h3 class="panel-title">昵称: &nbsp;<span id="user2_name"></span></h3>
                 </div>
                 <div class="panel-body">
-                    <p>编号:</p>
-                    <p>积分:</p>
-                    <p>胜率:</p>
+                    <p>编号: &nbsp;<span id="user2_id"></span></p>
+                    <p>胜率: &nbsp;<span id="user2_winrate"></span></p>
+                    <P>状态: &nbsp;<span id='user2_label' class="label label-success"></span></P>
                 </div>
             </div>
         </div>
         <div class="col-md-8">
-            <div id="gamezone" style="width: 100%;height:600px;">
-            </div>
+            <div id="gamezone" style="width: 100%;height:600px;"></div>
         </div>
         <div class="col-md-2">
             <div style="height:30px;"></div>
             <div class="panel panel-warning">
                 <div class="panel-heading">
-                    <h3 class="panel-title">昵称:</h3>
+                    <h3 class="panel-title">昵称: &nbsp;<span id="user3_name"></span></h3>
                 </div>
                 <div class="panel-body">
-                    <p>编号:</p>
-                    <p>积分:</p>
-                    <p>胜率:</p>
+                    <p>编号: &nbsp;<span id="user3_id"></span></p>
+                    <p>胜率: &nbsp;<span id="user3_winrate"></span></p>
+                    <P>状态: &nbsp;<span id='user3_label' class="label label-success"></span></P>
                 </div>
             </div>
-            <div style="height:200px;"></div>
+            <div style="height:150px;">
+                <div id="alert_putcell" class="alert alert-info alert-dismissible fade in" style="display: none;"
+                     role="alert">
+                    <button type="button" class="close" data-dismiss="alert"><span
+                            aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                    <h4>你的回合</h4>
+                    <p>请在5秒内内放置10个细胞</p>
+                    <p>
+                        <button id="bt_submitcell" type="button" class="btn btn-success"> <span id="badge_seconds"
+                                                                                                class="badge">5秒</span>
+                        </button>
+                    </p>
+                </div>
+            </div>
             <div class="panel panel-danger">
                 <div class="panel-heading">
-                    <h3 class="panel-title">昵称:</h3>
+                    <h3 class="panel-title">昵称: &nbsp;<span id="user4_name"></span></h3>
                 </div>
                 <div class="panel-body">
-                    <p>编号:</p>
-                    <p>积分:</p>
-                    <p>胜率:</p>
+                    <p>编号: &nbsp;<span id="user4_id"></span></p>
+                    <p>胜率: &nbsp;<span id="user4_winrate"></span></p>
+                    <P>状态: &nbsp;<span id='user4_label' class="label label-success"></span></P>
                 </div>
             </div>
         </div>
@@ -93,47 +114,147 @@
     // 基于准备好的dom，初始化echarts实例
     var myChart = echarts.init(document.getElementById('gamezone'));
 
-    var dataAll = [
-        [
-            [0.5, 0.5],
-            [8.5, 6.5],
-            [13.5, 7.5],
-            [9.5, 8.5],
-            [11.5, 8.5],
-            [14.5, 9.5],
-            [6.5, 7.5],
-            [4.5, 4.5],
-            [12.5, 10.5],
-            [7.5, 4.5],
-            [5.5, 5.5]
-        ],
-        [
-            [1.5, 1.5],
-            [9.5, 7.5],
-            [14.5, 8.5],
-            [10.5, 9.5],
-            [12.5, 9.5],
-            [15.5, 10.5],
-            [7.5, 8.5],
-            [5.5, 5.5],
-            [13.5, 11.5],
-            [8.5, 5.5],
-            [6.5, 6.5]
-        ],
-        [
-            [2.5, 2.5],
-            [10.5, 8.5],
-            [15.5, 8.5],
-            [10.5, 10.5]
-        ],
-        [
-            [3.5, 2.5],
-            [17.5, 8.5],
-            [16.5, 8.5],
-            [12.5, 10.5]
-        ]
+    // 初始化原始细胞数据
+    function initDataOrigin(data_origin) {
+        for (var i = 0; i < 20; i++) {
+            for (var j = 0; j < 20; j++) {
+                data_origin[i * 20 + j] = [i + 0.5, j + 0.5];
+            }
+        }
+    }
+
+    // 原始占位细胞坐标数据,用来监听鼠标事件
+    var data_origin = [];
+    initDataOrigin(data_origin);
+
+    // 获取到的细胞位置数据
+    // 用户1,用户2,用户3,用户4
+    //    var data_user = [
+    //        [
+    //            [0, 0],
+    //            [8, 6],
+    //            [13, 7],
+    //            [9, 8]
+    //        ],
+    //        [
+    //            [1, 1],
+    //            [9, 7],
+    //            [14,]
+    //        ],
+    //        [
+    //            [2, 2],
+    //            [10, 8],
+    //            [15, 8]
+    //        ],
+    //        [
+    //            [3, 2],
+    //            [17, 8],
+    //            [16, 8]
+    //        ]
+    //    ];
+    var data_user = [[], [], [], []];
+    var data_owner = [];
+
+    // 分配细胞空间
+    function allocateCell(data_user) {
+        initDataOrigin(data_origin);
+        var x, y;// 用户细胞位置
+        var x1, y1;// 初始占位细胞位置
+        for (var i = 0; i < data_user.length; i++) {
+            for (var j = 0; j < data_user[i].length; j++) {
+                // 加上 0.5
+                data_user[i][j][0] += 0.5;
+                data_user[i][j][1] += 0.5;
+                x = data_user[i][j][0];
+                y = data_user[i][j][1];
+                // 在占位细胞坐标数据中搜索,如果有则删除这个占位细胞,否则当前位置会有两个细胞
+                for (var k = 0; k < data_origin.length; k++) {
+                    x1 = data_origin[k][0];
+                    y1 = data_origin[k][1];
+                    if (x == x1 && y == y1) {
+                        data_origin.splice(k, 1);// 删除当前占位细胞
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // 用户细胞和原始细胞的配置项
+    var myseries = [
+        {
+            name: '0',
+            type: 'scatter',
+            xAxisIndex: 0,
+            yAxisIndex: 0,
+            data: data_user[0],
+            symbol: 'rect',
+            symbolSize: 20,
+            itemStyle: {
+                normal: {
+                    color: 'rgb(66, 139, 202)'
+                }
+            }
+        },
+        {
+            name: '1',
+            type: 'scatter',
+            xAxisIndex: 0,
+            yAxisIndex: 0,
+            data: data_user[1],
+            symbol: 'rect',
+            symbolSize: 20,
+            itemStyle: {
+                normal: {
+                    color: 'rgb(184, 212, 135)'
+                }
+            }
+        },
+        {
+            name: '2',
+            type: 'scatter',
+            xAxisIndex: 0,
+            yAxisIndex: 0,
+            data: data_user[2],
+            symbol: 'rect',
+            symbolSize: 20,
+            itemStyle: {
+                normal: {
+                    color: 'rgb(249, 235, 113)'
+                }
+            }
+        },
+        {
+            name: '3',
+            type: 'scatter',
+            xAxisIndex: 0,
+            yAxisIndex: 0,
+            data: data_user[3],
+            symbol: 'rect',
+            symbolSize: 20,
+            itemStyle: {
+                normal: {
+                    color: 'rgb(236, 131, 148)'
+                }
+            }
+        },
+        {
+            name: 'origin',
+            type: 'scatter',
+            xAxisIndex: 0,
+            yAxisIndex: 0,
+            data: data_origin,
+            symbol: 'rect',
+            symbolSize: 20,
+            itemStyle: {
+                normal: {
+                    color: 'rgb(255, 255, 255)'
+                }
+            }
+        }
     ];
 
+    // 游戏主场地的基础配置项设置
     option = {
         title: {
             text: '生命游戏',
@@ -141,154 +262,338 @@
             y: 0
         },
         grid: [
-            {x: '7%', y: '7%', width: '80%', height: '80%'}
+            {x: '7%', y: '7%', width: '80%', height: '80%', borderColor: '#8A8A8A', show: true}
         ],
         tooltip: {
-            formatter: 'Group {a}: ({c})'
+            formatter: 'position {a}: ({c})'
         },
         xAxis: [
-            {gridIndex: 0, min: 0, max: 20, interval: 1}
+            {
+                gridIndex: 0, min: 0, max: 20, interval: 1,
+                axisLine: {show: false},
+                axisTick: {show: false},
+                axisLabel: {show: false}
+            }
         ],
         yAxis: [
-            {gridIndex: 0, min: 0, max: 20, interval: 1}
-        ],
-        series: [
             {
-                name: '1',
-                type: 'scatter',
-                xAxisIndex: 0,
-                yAxisIndex: 0,
-                data: dataAll[0],
-                symbol:'rect',
-                symbolSize:20,
-                itemStyle: {
-                    normal: {
-                        // shadowBlur: 10,
-                        // shadowColor: 'rgba(128, 128, 128, 1)',
-                        // shadowOffsetY: 5,
-                        color: 'rgb(66, 139, 202)'
-                    }
-                }
-            },
-            {
-                name: '2',
-                type: 'scatter',
-                xAxisIndex: 0,
-                yAxisIndex: 0,
-                data: dataAll[1],
-                symbol:'rect',
-                symbolSize:20,
-                itemStyle: {
-                    normal: {
-                        // shadowBlur: 10,
-                        // shadowColor: 'rgba(128, 128, 128, 1)',
-                        // shadowOffsetY: 5,
-                        color: 'rgb(184, 212, 135)'
-                    }
-                }
-            },
-            {
-                name: '3',
-                type: 'scatter',
-                xAxisIndex: 0,
-                yAxisIndex: 0,
-                data: dataAll[2],
-                symbol:'rect',
-                symbolSize:20,
-                itemStyle: {
-                    normal: {
-                        // shadowBlur: 10,
-                        // shadowColor: 'rgba(128, 128, 128, 1)',
-                        // shadowOffsetY: 5,
-                        color: 'rgb(249, 235, 113)'
-                    }
-                }
-            },
-            {
-                name: '4',
-                type: 'scatter',
-                xAxisIndex: 0,
-                yAxisIndex: 0,
-                data: dataAll[3],
-                symbol:'rect',
-                symbolSize:20,
-                itemStyle: {
-                    normal: {
-                        // shadowBlur: 10,
-                        // shadowColor: 'rgba(128, 128, 128, 1)',
-                        // shadowOffsetY: 5,
-                        color: 'rgb(236, 131, 148)'
-                    }
-                }
+                gridIndex: 0, min: 0, max: 20, interval: 1,
+                axisLine: {show: false},
+                axisTick: {show: false},
+                axisLabel: {show: false}
             }
-        ]
+        ],
+        series: myseries
     };
-    // 使用刚指定的配置项和数据显示图表。
+
+    // 使用刚指定的配置项和数据显示图表
     myChart.setOption(option);
-</script>
+    console.log('场地初始化完成');
 
-<script type="text/javascript">
-    var timedCount = function(){
-        // 发出AJAX请求
+    // 轮到那个玩家开始游戏,这个玩家才能出发添加细胞操作
+    var turn_id = 0;
+    // 是否处于倒计时阶段
+    var isCountDown = false;
 
-        setTimeout(timedCount,1000);
-    }
+    // 点击特定元素是时触发
+    myChart.on('click', function (params) {
+//        console.log(params);
+        if (turn_id == $("#userid_hidden").text() && isCountDown) {
+            var seriesName = params.seriesName;// 获得对应data_user的下标
+            var data = params.data;// 获取当前点的坐标信息
+            if (seriesName == 'origin') {
+                // 假设用户为 0,1,2,3
+                for (var i = 0; i < data_origin.length; i++) {
+                    if (data_origin[i][0] == data[0] && data_origin[i][1] == data[1]) {
+                        data_origin.splice(i, 1);
+                        for (var j = 0; j < data_owner.length; j++) {
+                            if (data_owner[j] == $("#userid_hidden").text()) {
+                                data_user[j].push(data);
+                                break;
+                            }
+                        }
 
-    $(document).ready(function(){
-        timedCount();
-
-        var ready = true;
-        $("#bt_userready").click(function(){
-            console.log('userready');
-            var url;
-            if(ready) url = '/user_ready';
-            else url = '/user_cancel_ready';
-
-            $.ajax({
-                type:'post',
-                url:url,
-                dataType: 'json',
-                data: {
-                    user_id: $("#userid_hidden").text(),
-                    room_id: $("#roomid_hidden").text()
-                },
-                success: function(data){
-                    console.log(data);
-                    ready = !ready;
-                    if(ready) $("#bt_userready").text("准备");
-                    else $("#bt_userready").text("取消准备");
-//                    $("#bt_userready").prop("disabled", true);
-
-                },
-                error: function(jqXHR, textStatus, errorThrown){
-//                    alert('error ' + textStatus + " " + errorThrown);
+                    }
                 }
-            });
-        });
-
-        $("#userexit").click(function(){
-            console.log('userexit');
-            $.ajax({
-                type:'post',
-                url:"/exit_room_by_id",
-                dataType: 'json',
-                data: {
-                    user_id: $("#userid_hidden").text(),
-                    room_id: $("#roomid_hidden").text()
-                },
-                success: function(data){
-                    console.log(data);
-                },
-                error: function(jqXHR, textStatus, errorThrown){
-//                    alert('error ' + textStatus + " " + errorThrown);
-                }
-            });
-        });
+                console.log('用户添加位置 [' + params.data[0] + ', ' + params.data[1] + ']');
+                myChart.setOption(option);
+            }
+        }
     });
 </script>
 
-<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-<script src="http://cdn.bootcss.com/jquery/1.11.1/jquery.min.js"></script>
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        var gamestatus = false;
+        var ownerid = -1;
+
+        var getRoomInfo = function () {
+            var users = null;
+            $.ajax({
+                type: 'post',
+                url: '/get_room_info',
+                dataType: 'json',
+                data: {
+                    user_id: $("#userid_hidden").text(),
+                    room_id: $("#roomid_hidden").text()
+                },
+                success: function (data) {
+                    console.log('获取房间信息: ');
+                    console.log(data);
+                    users = data.users;
+                    gamestatus = data.status;
+                    ownerid = data.owner;
+                    var myid = $("#userid_hidden").text();
+                    var i = 0;
+                    var winrate = 0;
+                    console.log('设置用户数据, 设置按钮状态');
+                    for (i = 0; i < users.length; i++) {
+//                        console.log(users[i]);
+                        if (!$.isEmptyObject(users[i])) {
+                            // 设置用户信息
+                            $("#user" + (i + 1) + "_name").text(users[i].user_name);
+                            $("#user" + (i + 1) + "_id").text(users[i].user_id);
+                            winrate = users[i].win / (users[i].win + users[i].fail);
+                            $("#user" + (i + 1) + "_windrate").text(winrate);
+                            // 设置标签属性
+                            if (users[i].user_status) {
+                                $("#user" + (i + 1) + "_label").attr('class', 'label label-success');
+                                $("#user" + (i + 1) + "_label").text('准备');
+                            } else {
+                                $("#user" + (i + 1) + "_label").attr('class', 'label label-warning');
+                                $("#user" + (i + 1) + "_label").text('未准备');
+                            }
+                            // 设置游戏按钮状态
+                            if (myid == users[i].user_id) {
+                                // 判断是不是房主
+                                if (myid == ownerid) {
+                                    if (!users[i].user_status) $("#bt_userready").text("开始");
+                                } else {
+                                    if (users[i].user_status) {
+                                        $("#bt_userready").text("取消准备");
+                                    } else {
+                                        $("#bt_userready").text("准备");
+                                    }
+                                }
+
+                            }
+                        } else {
+                            console.log('user[' + i + '] is null');
+                            $("#user" + (i + 1) + "_name").text('');
+                            $("#user" + (i + 1) + "_id").text('');
+                            $("#user" + (i + 1) + "_winrate").text('');
+                            $("#user" + (i + 1) + "_label").text('')
+                        }
+                    }
+                    // 游戏未开始,一直获取房间信息,判断玩家状态
+                    // console.log("gamestatus:" + gamestatus);
+                    if (!gamestatus)
+                        setTimeout(getRoomInfo, 2000);
+                    else {
+                        // 游戏开始, 设置按钮为禁用
+                        $("#bt_userready").attr('disabled', true);
+                        $("#bt_userexit").attr('disabled', true);
+
+                        // 设置data_owner,用来判断对应data_user中数据的所属
+                        // console.log(users);
+                        for (var i = 0; i < users.length; i++) {
+                            console.log(users[i].user_id);
+                            data_owner[i] = users[i].user_id;
+                        }
+                        console.log('gamestatus = true, 游戏开始, 禁用按钮,获取场地信息');
+                        getField();
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+//                    console.log('error ' + textStatus + " " + errorThrown);
+                }
+            });
+        }
+
+        // 判断游戏是否结束
+        var is_end = false;
+
+        var submitUserChange = function () {
+//            console.log(data_user);
+            for (var i = 0; i < data_user.length; i++) {
+                for (var j = 0; j < data_user[i].length; j++) {
+                    data_user[i][j][0] -= 0.5;
+                    data_user[i][j][1] -= 0.5;
+                }
+            }
+            var data = JSON.stringify(data_user);// 这里不知道为什么不能直接发JSON数组
+
+            $.ajax({
+                type: 'post',
+                url: '/change_field',
+                dataType: 'json',
+                data: {
+                    room_id: $("#roomid_hidden").text(),
+                    field: data
+                },
+                success: function (data) {
+                    console.log(data.response_code);
+                    if (data.response_code == 1) {
+                        console.log('成功提交field数据');
+                        if (!is_end) {
+                            setTimeout(getField, 1000);
+                        }
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+//                    alert('error ' + textStatus + " " + errorThrown);
+                }
+            });
+        }
+
+
+        var getField = function () {
+            $.ajax({
+                type: 'post',
+                url: '/get_field',
+                dataType: 'json',
+                data: {
+                    room_id: $("#roomid_hidden").text()
+                },
+                success: function (data) {
+                    console.log('成功获取场地信息: ')
+                    console.log(data);
+                    turn_id = data.turn_id;
+                    console.log("轮到这个玩家放置细胞了-> " + turn_id);
+                    is_end = data.is_end;// todo 判断游戏是否结束
+                    data_user = data.field;
+                    // 根据获取的场地信息,重新设置图表
+                    allocateCell(data_user, data_origin);
+                    for (var i = 0; i < data_user.length; i++) {
+                        myseries[i].data = data_user[i];
+                    }
+//                    console.log(data_user);
+                    // 更新图表
+                    myChart.setOption(option);
+
+                    // 如果是我的回合
+                    if (turn_id == $("#userid_hidden").text()) {
+                        // 显示提示用户添加细胞的信息框
+                        document.getElementById("alert_putcell").style.display = "";//显示
+                        var seconds = 5;
+                        var countdown = function (seconds) {
+                            isCountDown = true;
+                            $("#badge_seconds").text(seconds + '秒');
+                            seconds--;
+                            if (seconds > 0) setTimeout(function () {
+                                countdown(seconds)
+                            }, 1000);
+                            else {
+                                // 时间到,提交用户添加细胞的改动
+                                isCountDown = false;
+                                document.getElementById("alert_putcell").style.display = "none";//显示
+                                console.log('时间到,提交用户添加细胞后的所有field数据');
+                                submitUserChange();
+                            }
+                        }
+                        countdown(seconds);
+                    }else{
+                        if (!is_end) {
+                            setTimeout(getField, 1000);
+                        }
+                    }
+
+
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+//                    alert('error ' + textStatus + " " + errorThrown);
+                }
+            });
+        }
+
+        $("#bt_userready").click(function () {
+            console.log('userready');
+
+            var userid = $("#userid_hidden").text();
+            var roomid = $("#roomid_hidden").text();
+            if (userid == ownerid) {
+                $.ajax({
+                    type: 'post',
+                    url: '/begin_game',
+                    dataType: 'json',
+                    data: {
+                        user_id: userid,
+                        room_id: roomid
+                    },
+                    success: function (data) {
+                        console.log(data);
+                        // 此时如果是/change_user_status,不必对数据进行处理
+                        // 如果是/begin_game,需要格局responsecode对结果进行判断
+                        if (data.response_code == -2) {
+                            // 玩家未全部准备
+                            document.getElementById("alert_beginfail").style.display = "";//显示
+                            setTimeout(function () {
+                                document.getElementById("alert_beginfail").style.display = "none";//显示
+                            }, 1000);
+                        } else if (data.response_code == 1) {
+                            // 游戏开始
+                            // 设置按钮状态
+                            document.getElementById("alert_beginsuccess").style.display = "";//显示
+                            setTimeout(function () {
+                                document.getElementById("alert_beginsuccess").style.display = "none";//显示
+                            }, 1000);
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+//                    alert('error ' + textStatus + " " + errorThrown);
+                    }
+                });
+            } else {
+                $.ajax({
+                    type: 'post',
+                    url: '/change_user_status',
+                    dataType: 'json',
+                    data: {
+                        user_id: userid,
+                        room_id: roomid
+                    },
+                    success: function (data) {
+                        console.log(data);
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+//                    alert('error ' + textStatus + " " + errorThrown);
+                    }
+                });
+            }
+        });
+
+        // 先不要测试这个
+        $("#bt_userexit").click(function () {
+            console.log('userexit');
+            $.ajax({
+                type: 'post',
+                url: "/exit_game",
+                dataType: 'json',
+                data: {
+                    user_id: $("#userid_hidden").text(),
+                    room_id: $("#roomid_hidden").text()
+                },
+                success: function (data) {
+                    console.log(data);
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    alert('error ' + textStatus + " " + errorThrown);
+                }
+            });
+        });
+
+        $("#bt_test").click(function () {
+//            getField();
+        });
+
+        console.log('开始获取房间信息');
+        // 一直获取room_info,并设置相关属性
+        getRoomInfo();
+
+    });
+</script>
+
 <!-- Include all compiled plugins (below), or include individual files as needed -->
 <script src="/static/js/bootstrap.min.js"></script>
 </body>

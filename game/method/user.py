@@ -8,7 +8,7 @@ def login(request):
     # 查询,无结果就注册
     find_user = models.User.objects.filter(username=username)
     if not find_user:
-        find_user = models.User.objects.create(username=username)
+        find_user = models.User.objects.create(username=username, win=0, fail=0)
     else:
         find_user = find_user[0]
 

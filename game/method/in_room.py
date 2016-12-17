@@ -2,8 +2,22 @@ import random
 
 import math
 
+from django.shortcuts import render
+from django.template import Context
+
 from game.tool.room_tool import *
 from game.tool.tools import *
+
+
+def creat_test_room(request):
+    # 新房间
+    room = Room(len(rooms_list), 'test')
+    room.owner = 111
+    room.users = [111, 222]
+    room.users_status = {111: False, 222: False}
+    # 添加
+    rooms_list.append(room)
+    return to_json({'room_id': len(rooms_list)})
 
 
 # 新建房间 user_id room_name,暂时不考虑重名
@@ -14,12 +28,12 @@ def new_room(request):
     room = Room(len(rooms_list), room_name)
     room.owner = user_id
     room.users.append(user_id)
-    room.users_status.update({str(user_id): False})
+    room.users_status.update({user_id: False})
     # 添加
     rooms_list.append(room)
 
     # 跳转至房间页面
-    return to_json({'response_code': 1})
+    return to_json({'response_code': 1, 'room_id': room.id})
 
 
 # 获取房间，分页 page
@@ -79,7 +93,7 @@ def join_room_by_id(request):
     # 添加
     room.users.append(user_id)
     room.users_status.update({user_id: False})
-    return room.id
+    return to_json({'response_code': 1})
 
 
 # 加入指定房间 user_id room_name

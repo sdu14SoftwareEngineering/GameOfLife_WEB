@@ -261,13 +261,14 @@
         function set_user_info(data) {
             id = data['id'];
             name = data['name'];
-            win = data['win'];
-            fail = data['fail'];
+            win = parseFloat(data['win']);
+            fail = parseFloat(data['fail']);
             $('#username').text(name);
             $('#win').text(win);
             $('#fail').text(fail);
-            if (fail != 0) {
-                $('#win_rate').text(parseFloat(win) / fail);
+	    total = win+fail;
+            if (total != 0) {
+                $('#win_rate').text(win/total);
             } else {
                 $('#win_rate').text(0);
             }

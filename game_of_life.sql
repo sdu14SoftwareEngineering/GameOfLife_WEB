@@ -10,7 +10,7 @@ Target Server Type    : MYSQL
 Target Server Version : 50711
 File Encoding         : 65001
 
-Date: 2016-11-17 12:36:52
+Date: 2016-12-21 21:42:55
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -53,7 +53,7 @@ CREATE TABLE `auth_permission` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `auth_permission_content_type_id_01ab375a_uniq` (`content_type_id`,`codename`),
   CONSTRAINT `auth_permissi_content_type_id_2f476e4b_fk_django_content_type_id` FOREIGN KEY (`content_type_id`) REFERENCES `django_content_type` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for auth_user
@@ -135,7 +135,7 @@ CREATE TABLE `django_content_type` (
   `model` varchar(100) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `django_content_type_app_label_76bd3d3b_uniq` (`app_label`,`model`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for django_migrations
@@ -168,6 +168,7 @@ DROP TABLE IF EXISTS `game_user`;
 CREATE TABLE `game_user` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `username` varchar(30) NOT NULL,
-  `password` varchar(30) NOT NULL,
+  `win` int(11) NOT NULL,
+  `fail` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=461 DEFAULT CHARSET=utf8;

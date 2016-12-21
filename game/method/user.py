@@ -16,14 +16,14 @@ def login(request):
     user_cookie = {
         'id': find_user.id,
         'name': find_user.username,
-        'win': 0,
-        'fail': 0
+        'win': find_user.win,
+        'fail': find_user.fail
     }
     response = to_json({
         'response_code': 1, 'id': find_user.id,
         'name': find_user.username,
-        'win': 0,
-        'fail': 0
+        'win': find_user.win,
+        'fail': find_user.fail
     })
     if not request.COOKIES:
         response.set_cookie('user_cookie', user_cookie)

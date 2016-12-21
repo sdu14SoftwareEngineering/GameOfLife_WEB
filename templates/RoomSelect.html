@@ -76,7 +76,7 @@
 
             $('#my_modal').on('hidden.bs.modal', function (e) {
                 if (user_close_my_modal) { //用户自己关闭注册对话框
-                    $.post('/login', {'username': '匿名'}, function (data) {
+                    $.post('/login', {'username': 'anonymous'}, function (data) {
                         set_user_info(fromJSON(data));
                     });
                 } else {
@@ -84,21 +84,14 @@
                 }
                 $('#username_alert').hide();
             });
-            $('#sign_up').click(function (e) { //向后台请求注册
-                var username = $.trim($('input[name="username"]').val());
-                if (username == '') {
-                    var a = $('#username_alert');
-                    a.text("用户名为空，你确定要使用'匿名'作为用户名吗？")
-                    a.show();
-                    $('input[name="username"]').val('匿名');
-                    return;
-                }
-                $.post('/login', {'username': username}, function (data) {
-                    user_close_my_modal = false;
-                    set_user_info(fromJSON(data));
-                    $('#my_modal').modal('hide');
-                });
-            });
+	    $('#my_modal').keydown(function(e) {
+		if(e.keyCode == 13) {
+		    signUp(e);
+		};
+	    });
+            $('#sign_up').click(function(e) {
+		signUp(e);
+	    });
 
             $('.col-md-3').each(function () {
                 $(this).click(function (e) { //向后台请求进入房间
@@ -119,24 +112,14 @@
                 $('#error_msg').hide();
             });
 
-            $('#new_room').click(function (e) { //向后台请求创建新房间
-                var new_room_name = $.trim($('input[name="room_name"]').val());
-                if (new_room_name == '') {
-                    var a = $('#room_alert');
-                    a.text("房间名不能为空！");
-                    a.show();
-                    return;
-                }
-                $.post('/new_room', {'user_id': id, 'room_name': new_room_name}, function (data) {
-                    var data = fromJSON(data);
-                    if (data['response_code'] == -1) {
-                        $('#error_msg').text(data['error_msg']);
-                        $('#alert_dialog').modal('show');
-                        return;
-                    }
-                    $.standard_post('/room', {'user_id': id, 'room_id': data['room_id']});
-                });
-            });
+	    $('#room_dialog').keydown(function(e) {
+		if(e.keyCode == 13) {
+		    createNewRoom(e);
+		};
+	    });
+	    $('#new_room').click(function(e) {
+		createNewRoom(e);
+	    });
 
             $('#search').click(function (e) {
                 var search_text = $.trim($('#search_text').val());
@@ -201,6 +184,41 @@
             });
         });
 
+	function createNewRoom(e) { //向后台请求创建新房间
+	    var new_room_name = $.trim($('input[name="room_name"]').val());
+	    if (new_room_name == '') {
+		var a = $('#room_alert');
+		a.text("房间名不能为空！");
+		a.show();
+		return;
+	    }
+	    $.post('/new_room', {'user_id': id, 'room_name': new_room_name}, function (data) {
+		var data = fromJSON(data);
+		if (data['response_code'] == -1) {
+		    $('#error_msg').text(data['error_msg']);
+		    $('#alert_dialog').modal('show');
+		    return;
+		}
+		$.standard_post('/room', {'user_id': id, 'room_id': data['room_id']});
+	    });
+	}
+
+	function signUp(e) { //向后台请求注册
+	    var username = $.trim($('input[name="username"]').val());
+	    if (username == '') {
+		var a = $('#username_alert');
+		a.text("用户名为空，你确定要使用'anonymous'作为用户名吗？")
+		    a.show();
+		$('input[name="username"]').val('anonymous');
+		return;
+	    }
+	    $.post('/login', {'username': username}, function (data) {
+		user_close_my_modal = false;
+		set_user_info(fromJSON(data));
+		$('#my_modal').modal('hide');
+	    });
+	}
+
         function fromJSON(json) {
             return eval("(" + json + ")");
         }
@@ -261,13 +279,14 @@
         function set_user_info(data) {
             id = data['id'];
             name = data['name'];
-            win = data['win'];
-            fail = data['fail'];
+            win = parseFloat(data['win']);
+            fail = parseFloat(data['fail']);
             $('#username').text(name);
             $('#win').text(win);
             $('#fail').text(fail);
-            if (fail != 0) {
-                $('#win_rate').text(parseFloat(win) / fail);
+	    total = win+fail;
+            if (total != 0) {
+                $('#win_rate').text((win*100/total).toFixed(2));
             } else {
                 $('#win_rate').text(0);
             }

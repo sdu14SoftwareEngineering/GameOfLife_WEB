@@ -9,15 +9,8 @@ from game.tool.room_tool import *
 from game.tool.tools import *
 
 
-def creat_test_room(request):
-    # 新房间
-    room = Room(len(rooms_list), 'test')
-    room.owner = 111
-    room.users = [111, 222]
-    room.users_status = {111: False, 222: False}
-    # 添加
-    rooms_list.append(room)
-    return to_json({'room_id': len(rooms_list)})
+def test(request):
+    return HttpResponse(request.GET.get('test'))
 
 
 # 新建房间 user_id room_name,暂时不考虑重名
@@ -90,15 +83,21 @@ def join_room_by_id(request):
     room_id = int(request.POST.get('room_id'))
     # 找到
     room = get_room_by_id(room_id)
-    # 添加
-    room.users.append(user_id)
-    room.users_status.update({user_id: False})
-    return to_json({'response_code': 1})
+    if room.status:
+        return to_json({
+            'response_code': -1,
+            'error_msg': '游戏进行中，无法进入'
+        })
+    else:
+        # 添加
+        room.users.append(user_id)
+        room.users_status.update({user_id: False})
+        return to_json({'response_code': 1})
 
 
 # 加入指定房间 user_id room_name
 def join_room_by_name(request):
-    user_id = request.POST.get('user_id')
+    user_id = int(request.POST.get('user_id'))
     room_name = request.POST.get('room_name')
     # 找到
     room = get_room_by_name(room_name)
@@ -110,7 +109,7 @@ def join_room_by_name(request):
 
 # 快速加入 user_id
 def join_room_random(request):
-    user_id = request.POST.get('user_id')
+    user_id = int(request.POST.get('user_id'))
     r_list = []
     for r in rooms_list:
         if (not r.status) and len(r.users) < 4:
@@ -136,8 +135,8 @@ def join_room_random(request):
 
 # 退出房间 user_id room_id
 def exit_room_by_id(request):
-    user_id = int(request.POST.get('user_id'))
-    room_id = int(request.POST.get('room_id'))
+    user_id = int(request.GET.get('user_id'))
+    room_id = int(request.GET.get('room_id'))
     # 找到房间
     room = get_room_by_id(room_id)
     f = False

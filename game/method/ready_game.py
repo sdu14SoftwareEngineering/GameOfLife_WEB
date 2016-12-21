@@ -8,6 +8,7 @@ from game.tool.tools import to_json
 def get_room_info(request):
     room_id = int(request.POST['room_id'])
     room = get_room_by_id(room_id)
+    print(room_id)
     print(room.users_status)
     users_array = []
     for u_id in room.users:
@@ -48,17 +49,21 @@ def begin_game(request):
     room_id = int(request.POST['room_id'])
     room = get_room_by_id(room_id)
     if user_id == room.owner:
-        room.users_status[user_id] = True
         f = True
-        for u_status in room.users_status:
-            if not u_status:
+        for u_id in room.users:
+            if u_id != room.owner and not room.users_status[u_id]:
                 f = False
         if f:
+            room.users_status[user_id] = True
             room.status = True
             # 计算布局线程,存入线程
-            thread_fields[room_id] = Thread_field(room.users)
+            thread_fields[room_id] = Thread_field(room.users, room_id)
             thread_fields[room_id].start()
             return to_json({'response_code': 1})
+        else:
+            return to_json({'response_code': -1})
+    else:
+        return to_json({'response_code': -1})
 
 # # 用户准备 user_id room_id
 # def user_ready(request):

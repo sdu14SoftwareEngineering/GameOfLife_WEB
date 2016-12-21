@@ -15,8 +15,9 @@ thread_fields = {}
 
 # 计时线程,计算布局
 class Thread_field(threading.Thread):
-    def __init__(self, users):
+    def __init__(self, users, room_id):
         threading.Thread.__init__(self)
+        self.room_id = room_id
         self.num = len(users)
         self.users = users
         self.turn_id = users[0]
@@ -51,22 +52,32 @@ class Thread_field(threading.Thread):
             if current_time >= 180:
                 self.is_end = True
                 self.new_result()
-                self._stop()
+                # self._stop()
                 break
+        room = room_tool.get_room_by_id(self.room_id)
+        room.status = False
+        for u_id in room.users:
+            room.users_status[u_id] = False
 
     def new_result(self):
         front_field = field_to_front_end(self.field)
         result = []
         max = 0
         for i in range(self.num):
-            result[i] = len(front_field[i])
-            if result[i] > max:
-                max = result[i]
-        for i in range(result):
+            length = len(front_field[i])
+            result.append(length)
+            if length > max:
+                max = length
+        for i in range(self.num):
+            find_user = models.User.objects.filter(id=self.users[i])
+            find_user = find_user[0]
             if result[i] == max:
                 self.winner.append(self.users[i])
+                find_user.win += 1
             else:
                 self.loser.append(self.users[i])
+                find_user.fail += 1
+            find_user.save()
 
     def change(self, front_field):
         self.field = field_from_front_end(front_field)
@@ -91,7 +102,8 @@ def change_field(request):
     room_id = int(request.POST['room_id'])
     field = json.loads(request.POST['field'])
     print('front post:%s' % field)
-    thread_fields[room_id].change(field)
+    # thread_fields[room_id].change(field)
+    thread_fields[room_id].field = field_from_front_end(field)
     return to_json({'response_code': 1})
 
 
@@ -101,7 +113,7 @@ def get_game_result(request):
     thread_field = thread_fields[room_id]
     winner = thread_field.winner
     loser = thread_field.loser
-    thread_fields.pop(thread_field)
+    # thread_fields.pop(thread_field)
     response_dict = {}
     for w in winner:
         response_dict.update({w: True})
@@ -114,20 +126,3 @@ def get_game_result(request):
 def exit_game(request):
     response = exit_room_by_id(request)
     return render(request, 'RoomSelect.html')
-
-# def get_field_test(request):
-#     field = strategy.one_gamer_strategy(strategy.field)
-#     strategy.field = field
-#     return HttpResponse(to_show(field))
-#
-#
-# def to_show(a):
-#     b = ''
-#     for aa in a:
-#         for aaa in aa:
-#             if aaa == 0:
-#                 aaa = '&nbsp'
-#             b += str(aaa) + '&nbsp&nbsp'
-#         b += '<br>'
-#     b = '<a style="font-size:20px">' + b + '</a>'
-#     return b
